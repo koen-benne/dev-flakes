@@ -15,6 +15,7 @@
             phpPackages.composer
             ddev
             colima
+            vscode-extensions.xdebug.php-debug
           ];
         };
       };
