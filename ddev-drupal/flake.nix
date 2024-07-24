@@ -26,6 +26,10 @@
 
             ddev drush cim -y -l $1
             '')
+            (writeScriptBin "colimastart" ''
+            #!${runtimeShell}
+            colima start --cpu 4 --memory 8 --disk 100
+            '')
             phpPackages.composer
             ddev
             colima
