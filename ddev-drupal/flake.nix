@@ -21,7 +21,7 @@
 
             platform db:dump -f db.sql -e "." --schema $1
 
-            ddev import-db --database=$1 < db.sql
+            ddev import-db --database=$1 --file=./db.sql
             rm db.sql
 
             ddev drush cim -y -l $1
