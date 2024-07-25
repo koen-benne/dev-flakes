@@ -24,8 +24,8 @@
             ddev import-db --database=$1 --file=./db.sql
             rm db.sql
 
-            ddev drush cim -y -l $1
-            ddev drush cim -y -l $1
+            ddev drush cim -y -l $1 || true
+            ddev drush cim -y -l $1 || true
             '')
             (writeScriptBin "colimastart" ''
             #!${runtimeShell}
