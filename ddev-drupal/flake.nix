@@ -32,6 +32,7 @@
             '')
             phpPackages.composer
             ddev
+            docker
             colima
             vscode-extensions.xdebug.php-debug
             platformsh
