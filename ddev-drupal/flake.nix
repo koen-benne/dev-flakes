@@ -32,6 +32,7 @@
             '')
             phpPackages.composer
             ddev
+            mkcert
             docker
             colima
             vscode-extensions.xdebug.php-debug
