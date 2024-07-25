@@ -25,6 +25,7 @@
             rm db.sql
 
             ddev drush cim -y -l $1
+            ddev drush cim -y -l $1
             '')
             (writeScriptBin "colimastart" ''
             #!${runtimeShell}
