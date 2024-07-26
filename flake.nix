@@ -60,23 +60,42 @@
                   '';
                 };
 
-                dvt = final.writeShellApplication {
-                  name = "dvt";
-                  text = ''
-                    if [ -z $1 ]; then
-                      echo "no template specified"
-                      exit 1
-                    fi
+                dev-utils = final.symlinkJoin {
+                  name = "dev-utils";
+                  paths = with final; [
+                    (writeShellApplication {
+                      name = "dvt";
+                      text = ''
+                        #!${runtimeShell}
+                        if [ -z "$1" ]; then
+                          echo "no template specified"
+                          exit 1
+                        fi
 
-                    TEMPLATE=$1
+                        TEMPLATE=$1
 
-                    nix \
-                      --experimental-features 'nix-command flakes' \
-                      flake init \
-                      --template \
-                      "github:the-nix-way/dev-templates#''${TEMPLATE}"
-                  '';
+                        nix \
+                          --experimental-features 'nix-command flakes' \
+                          flake init \
+                          --template \
+                          "github:the-nix-way/dev-templates#''${TEMPLATE}"
+                      '';
+                    })
+                    (writeShellApplication {
+                      name = "dvd";
+                      text = ''
+                        #!${runtimeShell}
+                        if [ -z "$1" ]; then
+                          echo "no flake specified"
+                          exit 1
+                        fi
+                        echo "use flake \"github:koen-benne/dev-flakes?dir=$1\"" >> .envrc
+                        direnv allow
+                      '';
+                    })
+                  ];
                 };
+
               })
           ];
         };
@@ -85,7 +104,7 @@
           packages = with pkgs; [ build check format update nixpkgs-fmt ];
         };
 
-        packages.default = pkgs.dvt;
+        packages.default = pkgs.dev-utils;
       };
       flake = {
         templates = rec {
