@@ -107,6 +107,9 @@
         packages.default = pkgs.dev-utils;
       };
       flake = {
+        overlays.default = final: prev: {
+          dev-utils = self.packages.${final.system}.default;
+        };
         templates = rec {
           default = empty;
 
