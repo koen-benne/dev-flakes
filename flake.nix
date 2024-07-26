@@ -5,111 +5,102 @@
   inputs.nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/*.tar.gz";
 
   outputs = inputs@{ flake-parts, ... }:
+    let
+      getSystem = "SYSTEM=$(nix eval --impure --raw --expr 'builtins.currentSystem')";
+      forEachDir = exec: ''
+        for dir in */; do
+          (
+            cd "''${dir}"
+
+            ${exec}
+          )
+        done
+      '';
+    in
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
+      imports = [
+        inputs.flake-parts.flakeModules.easyOverlay
+      ];
       perSystem = { config, self', inputs', pkgs, system, ... }: {
-        _module.args.pkgs = import inputs.nixpkgs {
-          inherit system;
-          overlays = [
-            (final: prev:
-              let
-                getSystem = "SYSTEM=$(nix eval --impure --raw --expr 'builtins.currentSystem')";
-                forEachDir = exec: ''
-                  for dir in */; do
-                    (
-                      cd "''${dir}"
+        overlayAttrs = {
+          dev-utils = config.packages.default;
+        };
+        devShells.default = pkgs.mkShell {
+          packages = with pkgs; [
+            (writeShellApplication {
+              name = "format";
+              runtimeInputs = with pkgs; [ nixpkgs-fmt ];
+              text = "nixpkgs-fmt '**/*.nix'";
+            })
+            # only run this locally, as Actions will run out of disk space
+            (writeShellApplication {
+              name = "build";
+              text = ''
+                ${getSystem}
 
-                      ${exec}
-                    )
-                  done
-                '';
-              in
-              {
-                format = final.writeShellApplication {
-                  name = "format";
-                  runtimeInputs = with final; [ nixpkgs-fmt ];
-                  text = "nixpkgs-fmt '**/*.nix'";
-                };
-
-                # only run this locally, as Actions will run out of disk space
-                build = final.writeShellApplication {
-                  name = "build";
-                  text = ''
-                    ${getSystem}
-
-                    ${forEachDir ''
-                      echo "building ''${dir}"
-                      nix build ".#devShells.''${SYSTEM}.default"
-                    ''}
-                  '';
-                };
-
-                check = final.writeShellApplication {
-                  name = "check";
-                  text = forEachDir ''
-                    echo "checking ''${dir}"
-                    nix flake check --all-systems --no-build
-                  '';
-                };
-
-                update = final.writeShellApplication {
-                  name = "update";
-                  text = forEachDir ''
-                    echo "updating ''${dir}"
-                    nix flake update
-                  '';
-                };
-
-                dev-utils = final.symlinkJoin {
-                  name = "dev-utils";
-                  paths = with final; [
-                    (writeShellApplication {
-                      name = "dvt";
-                      text = ''
-                        #!${runtimeShell}
-                        if [ -z "$1" ]; then
-                          echo "no template specified"
-                          exit 1
-                        fi
-
-                        TEMPLATE=$1
-
-                        nix \
-                          --experimental-features 'nix-command flakes' \
-                          flake init \
-                          --template \
-                          "github:the-nix-way/dev-templates#''${TEMPLATE}"
-                      '';
-                    })
-                    (writeShellApplication {
-                      name = "dvd";
-                      text = ''
-                        #!${runtimeShell}
-                        if [ -z "$1" ]; then
-                          echo "no flake specified"
-                          exit 1
-                        fi
-                        echo "use flake \"github:koen-benne/dev-flakes?dir=$1\"" >> .envrc
-                        direnv allow
-                      '';
-                    })
-                  ];
-                };
-
-              })
+                ${forEachDir ''
+                  echo "building ''${dir}"
+                  nix build ".#devShells.''${SYSTEM}.default"
+                ''}
+              '';
+            })
+            (writeShellApplication {
+              name = "check";
+              text = forEachDir ''
+                echo "checking ''${dir}"
+                nix flake check --all-systems --no-build
+              '';
+            })
+            (writeShellApplication {
+              name = "update";
+              text = forEachDir ''
+                echo "updating ''${dir}"
+                nix flake update
+              '';
+            })
+            nixpkgs-fmt
           ];
         };
 
-        devShells.default = pkgs.mkShell {
-          packages = with pkgs; [ build check format update nixpkgs-fmt ];
-        };
+        packages.default = (
+          pkgs.symlinkJoin {
+            name = "dev-utils";
+            paths = with pkgs; [
+              (writeShellApplication {
+                name = "dvt";
+                text = ''
+                  #!${runtimeShell}
+                  if [ -z "$1" ]; then
+                    echo "no template specified"
+                    exit 1
+                  fi
 
-        packages.default = pkgs.dev-utils;
+                  TEMPLATE=$1
+
+                  nix \
+                    --experimental-features 'nix-command flakes' \
+                    flake init \
+                    --template \
+                    "github:the-nix-way/dev-templates#''${TEMPLATE}"
+                '';
+              })
+              (writeShellApplication {
+                name = "dvd";
+                text = ''
+                  #!${runtimeShell}
+                  if [ -z "$1" ]; then
+                    echo "no flake specified"
+                    exit 1
+                  fi
+                  echo "use flake \"github:koen-benne/dev-flakes?dir=$1\"" >> .envrc
+                  direnv allow
+                '';
+              })
+            ];
+          });
       };
       flake = {
-        overlays.default = final: prev: {
-          dev-utils = self.packages.${final.system}.default;
-        };
         templates = rec {
           default = empty;
 
