@@ -20,12 +20,16 @@
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
       imports = [
+        # This allows for creating overlays easily.
         inputs.flake-parts.flakeModules.easyOverlay
       ];
       perSystem = { config, self', inputs', pkgs, system, ... }: {
+        # Free overlay with easyOverlay module.
         overlayAttrs = {
+          # inherit (config.packages) [name]
           dev-utils = config.packages.default;
         };
+        # Devshell packages including some custom packages
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
             (writeShellApplication {
@@ -63,6 +67,7 @@
           ];
         };
 
+        # Default package. Also used in the overlay
         packages.default = (
           pkgs.symlinkJoin {
             name = "dev-utils";
@@ -101,6 +106,7 @@
           });
       };
       flake = {
+        # Templates are defined here
         templates = rec {
           default = empty;
 
