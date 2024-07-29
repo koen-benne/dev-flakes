@@ -34,8 +34,8 @@
           packages = with pkgs; [
             (writeShellApplication {
               name = "format";
-              runtimeInputs = with pkgs; [ nixpkgs-fmt ];
-              text = "nixpkgs-fmt '**/*.nix'";
+              runtimeInputs = with pkgs; [ nixfmt ];
+              text = "nixfmt '**/*.nix'";
             })
             # only run this locally, as Actions will run out of disk space
             (writeShellApplication {
@@ -63,7 +63,7 @@
                 nix flake update
               '';
             })
-            nixpkgs-fmt
+            nixfmt
           ];
         };
 

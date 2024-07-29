@@ -1,0 +1,20 @@
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: "ubuntu-22.04"
+    steps:
+      - uses: "actions/checkout@v4"
+      - uses: "DeterminateSystems/flake-checker-action@main"
+        with:
+          fail-mode: true
+      - uses: "DeterminateSystems/nix-installer-action@main"
+      - uses: "DeterminateSystems/magic-nix-cache-action@main"
+      - name: Flake check
+        run: nix develop --command check
+      - name: Check formatting
+        run: |
+          git ls-files '*.nix' | xargs nix develop --command nixfmt --check
