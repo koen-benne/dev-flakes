@@ -4,26 +4,37 @@
   inputs.flake-parts.url = "github:hercules-ci/flake-parts";
   inputs.nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/*.tar.gz";
 
-  outputs = inputs@{ flake-parts, ... }:
-    let
-      getSystem = "SYSTEM=$(nix eval --impure --raw --expr 'builtins.currentSystem')";
-      forEachDir = exec: ''
-        for dir in */; do
-          (
-            cd "''${dir}"
+  outputs = inputs @ {flake-parts, ...}: let
+    getSystem = "SYSTEM=$(nix eval --impure --raw --expr 'builtins.currentSystem')";
+    forEachDir = exec: ''
+      for dir in */; do
+        (
+          cd "''${dir}"
 
-            ${exec}
-          )
-        done
-      '';
-    in
-    flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
+          ${exec}
+        )
+      done
+    '';
+  in
+    flake-parts.lib.mkFlake {inherit inputs;} {
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "aarch64-darwin"
+        "x86_64-darwin"
+      ];
       imports = [
         # This allows for creating overlays easily.
         inputs.flake-parts.flakeModules.easyOverlay
       ];
-      perSystem = { config, self', inputs', pkgs, system, ... }: {
+      perSystem = {
+        config,
+        self',
+        inputs',
+        pkgs,
+        system,
+        ...
+      }: {
         # Free overlay with easyOverlay module.
         overlayAttrs = {
           # inherit (config.packages) [name]
@@ -34,8 +45,8 @@
           packages = with pkgs; [
             (writeShellApplication {
               name = "format";
-              runtimeInputs = with pkgs; [ nixfmt ];
-              text = "nixfmt '**/*.nix'";
+              runtimeInputs = with pkgs; [alejandra];
+              text = "alejandra '**/*.nix'";
             })
             # only run this locally, as Actions will run out of disk space
             (writeShellApplication {
@@ -63,7 +74,7 @@
                 nix flake update
               '';
             })
-            nixfmt
+            alejandra
           ];
         };
 
@@ -103,7 +114,8 @@
                 '';
               })
             ];
-          });
+          }
+        );
       };
       flake = {
         # Templates are defined here
