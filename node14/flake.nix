@@ -22,8 +22,8 @@
       }: {
         devShells.default = pkgs.mkShell {
           nativeBuildInputs = with pkgs; [
-            nodejs_16
-            (yarn.override { nodejs = pkgs.nodejs_16; })
+            nodejs_14
+            (yarn.override { nodejs = pkgs.nodejs_14; })
           ];
         };
       };
