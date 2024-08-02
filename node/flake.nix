@@ -25,7 +25,6 @@
           nativeBuildInputs = with pkgs; [
             nodejs
             (yarn.override { nodejs = pkgs.nodejs; })
-            (pnpm.override { nodejs = pkgs.nodejs; })
           ];
         };
       };
