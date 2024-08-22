@@ -2,7 +2,9 @@
   description = "Flake for DDEV Drupal projects";
 
   inputs.flake-parts.url = "github:hercules-ci/flake-parts";
-  inputs.nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/*.tar.gz";
+  # QEMU causes issues if too old, revert back to flakehub later
+  # inputs.nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/*.tar.gz";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
   outputs = inputs @ {flake-parts, ...}:
     flake-parts.lib.mkFlake {inherit inputs;} {
