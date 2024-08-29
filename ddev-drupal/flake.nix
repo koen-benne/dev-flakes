@@ -23,9 +23,9 @@
         ...
       }: {
         devShells.default = pkgs.mkShell {
-          shellHook = ''
-            colima start --cpu 4 --memory 8 --disk 100
-          '';
+          # shellHook = ''
+          #   colima start --cpu 4 --memory 8 --disk 100
+          # '';
           nativeBuildInputs = with pkgs; [
             (writeScriptBin "setup-site" ''
               #!${runtimeShell}
