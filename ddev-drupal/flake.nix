@@ -22,6 +22,12 @@
         system,
         ...
       }: {
+        # Allow unfree
+        _module.args.pkgs = import inputs.nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+        };
+
         devShells.default = pkgs.mkShell {
           # shellHook = ''
           #   colima start --cpu 4 --memory 8 --disk 100
@@ -53,6 +59,7 @@
             colima
             vscode-extensions.xdebug.php-debug
             platformsh
+            nodePackages.intelephense
           ];
         };
       };
