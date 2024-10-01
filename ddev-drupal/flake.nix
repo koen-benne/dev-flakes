@@ -50,7 +50,7 @@
             '')
             (writeScriptBin "colimastart" ''
               #!${runtimeShell}
-              colima start --cpu 4 --memory 8 --disk 100
+              colima start --cpu 4 --memory 8 --disk 120
             '')
             phpPackages.composer
             ddev
