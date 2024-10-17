@@ -1,6 +1,5 @@
-# TODO: Make this more modular so that other flakes can extend it without duplicate code.
 {
-  description = "Flake for DDEV Drupal projects";
+  description = "Flake for Aviko backend project. Based on ddev-drupal flake.";
 
   inputs.flake-parts.url = "github:hercules-ci/flake-parts";
   # QEMU causes issues if too old, revert back to flakehub later
@@ -34,6 +33,21 @@
           #   colima start --cpu 4 --memory 8 --disk 100
           # '';
           nativeBuildInputs = with pkgs; [
+            (writeScriptBin "setup-site" ''
+              #!${runtimeShell}
+              if [ -z "$1" ]; then
+                echo "Please specify a site name"
+                exit 1
+              fi
+
+              platform db:dump -f db.sql -e "." --schema $1
+
+              ddev import-db --database=$1 --file=./db.sql
+              rm db.sql
+
+              ddev drush cim -y -l $1; true
+              ddev drush cim -y -l $1; true
+            '')
             (writeScriptBin "colimastart" ''
               #!${runtimeShell}
               colima start --cpu 4 --memory 8 --disk 120
@@ -44,6 +58,7 @@
             docker
             colima
             vscode-extensions.xdebug.php-debug
+            platformsh
             nodePackages.intelephense
           ];
         };
