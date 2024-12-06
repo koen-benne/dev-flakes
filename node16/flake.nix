@@ -20,6 +20,13 @@
         system,
         ...
       }: {
+        # Alter config to allow some packages
+        _module.args.pkgs = import inputs.nixpkgs {
+          inherit system;
+          config.permittedInsecurePackages = [
+            "nodejs-16.20.2"
+          ];
+        };
         devShells.default = pkgs.mkShell {
           nativeBuildInputs = with pkgs; [
             nodejs_16
