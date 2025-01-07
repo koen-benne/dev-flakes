@@ -105,10 +105,18 @@
                 name = "dvd";
                 text = ''
                   #!${runtimeShell}
-                  if [ -z "$1" ]; then
+                  if [ -z "${1}" ]; then
                     echo "no flake specified"
                     exit 1
                   fi
+                  # check if dir exists on github
+                  status_code=$(curl -s -o /dev/null -w "%{http_code}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/koen-benne/dev-flakes/contents/${1}")
+
+                  if [ "$status_code" -ne 200 ]; then
+                    echo "dev flake does not exist (HTTP status: ${status_code})"
+                    exit 1
+                  fi
+
                   echo "use flake \"github:koen-benne/dev-flakes?dir=$1\"" >> .envrc
                   direnv allow
                 '';
