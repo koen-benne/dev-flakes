@@ -6,7 +6,27 @@
   # inputs.nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/*.tar.gz";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
-  outputs = inputs @ {flake-parts, ...}:
+  inputs.drupal_ls = {
+    url = "github:jdrupal-dev/drupal_ls";
+    flake = false;
+  };
+
+  outputs = inputs @ {flake-parts, ...}: let
+    # Build drupal_ls
+    mkDrupalLs = pkgs: pkgs.rustPlatform.buildRustPackage {
+      pname = "drupal_ls";
+      version = "unstable-2024-10-20";
+
+      src = inputs.drupal_ls;
+
+      cargoHash = "sha256-Ju4yo4KUV9yGR3QVwqCzXp7OsBEbnRGdiObYLvhZcKs=";
+
+      meta = {
+        description = "Drupal Language Server";
+        homepage = "https://github.com/jdrupal-dev/drupal_ls";
+      };
+    };
+  in
     flake-parts.lib.mkFlake {inherit inputs;} {
       systems = [
         "x86_64-linux"
@@ -60,6 +80,7 @@
             vscode-extensions.xdebug.php-debug
             platformsh
             nodePackages.intelephense
+            (mkDrupalLs pkgs)
           ];
         };
       };

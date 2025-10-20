@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "drupal_ls": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1757485850,
+        "narHash": "sha256-jecDVJ2nb8pyUJUZpLlqfpzKA+8xUL69TRy+5QM+Cc0=",
+        "owner": "jdrupal-dev",
+        "repo": "drupal_ls",
+        "rev": "d5fb28af2c6b2c0afcc14d473bc062e71ac976be",
+        "type": "github"
+      },
+      "original": {
+        "owner": "jdrupal-dev",
+        "repo": "drupal_ls",
+        "type": "github"
+      }
+    },
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": "nixpkgs-lib"
@@ -48,6 +64,7 @@
     },
     "root": {
       "inputs": {
+        "drupal_ls": "drupal_ls",
         "flake-parts": "flake-parts",
         "nixpkgs": "nixpkgs"
       }
