@@ -60,7 +60,7 @@
                 exit 1
               fi
 
-              platform db:dump -f db.sql -e "." --schema $1
+              upsun db:dump -f db.sql -e "." --schema $1
 
               ddev import-db --database=$1 --file=./db.sql
               rm db.sql
@@ -78,7 +78,7 @@
             docker
             colima
             vscode-extensions.xdebug.php-debug
-            platformsh
+            upsun
             nodePackages.intelephense
             (mkDrupalLs pkgs)
           ];
