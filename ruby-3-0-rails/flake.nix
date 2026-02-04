@@ -37,8 +37,8 @@
 
              # NOTE: for nokogiri gem
             zlib
-            zlibxml2
-            zlibxslt
+            libxml2
+            libxslt
             pkg-config
           ];
         };
