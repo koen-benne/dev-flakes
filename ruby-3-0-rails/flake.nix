@@ -18,6 +18,9 @@
       pkgs = import nixpkgs {
         inherit system;
         overlays = [nixpkgs-ruby.overlays.default];
+        config.permittedInsecurePackages = [
+          "openssl-1.1.1w"
+        ];
       };
     in {
       devShell = with pkgs;
