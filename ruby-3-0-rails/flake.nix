@@ -30,7 +30,7 @@
             nodejs_20
             yarn
 
-            "ruby-3.0.5"
+            pkgs."ruby-3.0.5"
             bundler
             docker
             postgresql_17
