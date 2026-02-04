@@ -34,6 +34,12 @@
             docker
             postgresql_17
             libyaml # NOTE: for psych gem
+
+             # NOTE: for nokogiri gem
+            zlib
+            zlibxml2
+            zlibxslt
+            pkg-config
           ];
         };
     });
