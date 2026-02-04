@@ -31,7 +31,6 @@
             yarn
 
             pkgs."ruby-3.0.5"
-            bundler
             docker
             postgresql_17
             libyaml # NOTE: for psych gem
