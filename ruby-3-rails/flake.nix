@@ -32,6 +32,8 @@
             docker
             postgresql_17
             libyaml # NOTE: for psych gem
+            openssl
+            redis
           ];
         };
     });
