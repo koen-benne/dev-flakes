@@ -25,7 +25,7 @@
           buildInputs = [
             # Node.js and Yarn
             nodejs_20
-            yarn
+            yarn-berry
 
             ruby-3
             bundler # 2.7.2
