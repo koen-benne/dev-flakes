@@ -34,6 +34,7 @@
             libyaml # NOTE: for psych gem
             openssl
             redis
+            awscli2
           ];
         };
     });
