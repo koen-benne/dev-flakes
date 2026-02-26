@@ -23,6 +23,63 @@
       devShell = with pkgs;
         mkShell {
           buildInputs = [
+            # PostgreSQL management scripts
+            (writeScriptBin "pg-start" ''
+              #!${runtimeShell}
+              export PGDATA="$PWD/.postgres"
+
+              # Initialize PostgreSQL if not already initialized
+              if [ ! -d "$PGDATA" ]; then
+                echo "Initializing PostgreSQL data directory..."
+                initdb --auth=trust --no-locale --encoding=UTF8
+
+                # Configure to use local socket directory
+                echo "unix_socket_directories = '$PGDATA'" >> "$PGDATA/postgresql.conf"
+              fi
+
+              # Check if PostgreSQL is already running
+              if pg_ctl status > /dev/null 2>&1; then
+                echo "PostgreSQL is already running"
+              else
+                echo "Starting PostgreSQL..."
+                pg_ctl start -l "$PGDATA/logfile"
+                echo "PostgreSQL started successfully"
+              fi
+            '')
+
+            (writeScriptBin "pg-stop" ''
+              #!${runtimeShell}
+              export PGDATA="$PWD/.postgres"
+
+              if pg_ctl status > /dev/null 2>&1; then
+                echo "Stopping PostgreSQL..."
+                pg_ctl stop -m fast
+                echo "PostgreSQL stopped successfully"
+              else
+                echo "PostgreSQL is not running"
+              fi
+            '')
+
+            (writeScriptBin "pg-status" ''
+              #!${runtimeShell}
+              export PGDATA="$PWD/.postgres"
+
+              if [ ! -d "$PGDATA" ]; then
+                echo "PostgreSQL has not been initialized yet"
+                echo "Run 'pg-start' to initialize and start PostgreSQL"
+                exit 1
+              fi
+
+              if pg_ctl status > /dev/null 2>&1; then
+                echo "PostgreSQL is running"
+                pg_ctl status
+              else
+                echo "PostgreSQL is not running"
+                echo "Run 'pg-start' to start PostgreSQL"
+                exit 1
+              fi
+            '')
+
             # Node.js and Yarn
             nodejs_20
             yarn-berry
