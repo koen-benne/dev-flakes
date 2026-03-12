@@ -26,11 +26,12 @@
             # PostgreSQL management scripts
             (writeScriptBin "pg-start" ''
               #!${runtimeShell}
-              export PGDATA="$PWD/.postgres"
+              export PGDATA="$HOME/.local/share/postgres/$(basename "$PWD")"
+              mkdir -p "$(dirname "$PGDATA")"
 
               # Initialize PostgreSQL if not already initialized
               if [ ! -d "$PGDATA" ]; then
-                echo "Initializing PostgreSQL data directory..."
+                echo "Initializing PostgreSQL data directory at $PGDATA..."
                 initdb --auth=trust --no-locale --encoding=UTF8
 
                 # Configure to use local socket directory
@@ -49,7 +50,7 @@
 
             (writeScriptBin "pg-stop" ''
               #!${runtimeShell}
-              export PGDATA="$PWD/.postgres"
+              export PGDATA="$HOME/.local/share/postgres/$(basename "$PWD")"
 
               if pg_ctl status > /dev/null 2>&1; then
                 echo "Stopping PostgreSQL..."
@@ -62,7 +63,7 @@
 
             (writeScriptBin "pg-status" ''
               #!${runtimeShell}
-              export PGDATA="$PWD/.postgres"
+              export PGDATA="$HOME/.local/share/postgres/$(basename "$PWD")"
 
               if [ ! -d "$PGDATA" ]; then
                 echo "PostgreSQL has not been initialized yet"
