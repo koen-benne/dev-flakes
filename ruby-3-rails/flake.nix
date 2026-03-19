@@ -23,59 +23,68 @@
       devShell = with pkgs;
         mkShell {
           buildInputs = [
-            # PostgreSQL management scripts
+            # PostgreSQL Docker management scripts
             (writeScriptBin "pg-start" ''
               #!${runtimeShell}
-              export PGDATA="$HOME/.local/share/postgres/$(basename "$PWD")"
-              mkdir -p "$(dirname "$PGDATA")"
+              PORT="''${RAILS_DATABASE_PORT:-5432}"
+              BASE_NAME="$(basename "$PWD" | tr '[:upper:]' '[:lower:]' | tr -c '[:alnum:]-' '-' | sed 's/^-*//' | sed 's/-*$//')"
+              PROJECT_NAME="$BASE_NAME-postgres-$PORT"
+              
+              # Create docker-compose.yml content
+              COMPOSE_FILE=$(cat <<EOF
+              services:
+                db:
+                  image: postgres:17
+                  container_name: $PROJECT_NAME
+                  environment:
+                    - POSTGRES_HOST_AUTH_METHOD=trust
+                    - POSTGRES_USER=''${USER:-postgres}
+                  ports:
+                    - "$PORT:5432"
+                  volumes:
+                    - postgres_data:/var/lib/postgresql/data
 
-              # Initialize PostgreSQL if not already initialized
-              if [ ! -d "$PGDATA" ]; then
-                echo "Initializing PostgreSQL data directory at $PGDATA..."
-                initdb --auth=trust --no-locale --encoding=UTF8
-
-                # Configure to use local socket directory
-                echo "unix_socket_directories = '$PGDATA'" >> "$PGDATA/postgresql.conf"
-              fi
-
-              # Check if PostgreSQL is already running
-              if pg_ctl status > /dev/null 2>&1; then
-                echo "PostgreSQL is already running"
+              volumes:
+                postgres_data:
+              EOF
+              )
+              
+              # Check if container is already running
+              if docker ps --format '{{.Names}}' | grep -q "^$PROJECT_NAME$"; then
+                echo "PostgreSQL container is already running on port $PORT"
               else
-                echo "Starting PostgreSQL..."
-                pg_ctl start -l "$PGDATA/logfile"
-                echo "PostgreSQL started successfully"
+                echo "Starting PostgreSQL container on port $PORT..."
+                echo "$COMPOSE_FILE" | docker compose -p "$PROJECT_NAME" -f - up -d
+                echo "PostgreSQL started successfully on port $PORT"
               fi
             '')
 
             (writeScriptBin "pg-stop" ''
               #!${runtimeShell}
-              export PGDATA="$HOME/.local/share/postgres/$(basename "$PWD")"
-
-              if pg_ctl status > /dev/null 2>&1; then
-                echo "Stopping PostgreSQL..."
-                pg_ctl stop -m fast
+              PORT="''${RAILS_DATABASE_PORT:-5432}"
+              BASE_NAME="$(basename "$PWD" | tr '[:upper:]' '[:lower:]' | tr -c '[:alnum:]-' '-' | sed 's/^-*//' | sed 's/-*$//')"
+              PROJECT_NAME="$BASE_NAME-postgres-$PORT"
+              
+              if docker ps --format '{{.Names}}' | grep -q "^$PROJECT_NAME$"; then
+                echo "Stopping PostgreSQL container on port $PORT..."
+                docker stop "$PROJECT_NAME"
                 echo "PostgreSQL stopped successfully"
               else
-                echo "PostgreSQL is not running"
+                echo "PostgreSQL container on port $PORT is not running"
               fi
             '')
 
             (writeScriptBin "pg-status" ''
               #!${runtimeShell}
-              export PGDATA="$HOME/.local/share/postgres/$(basename "$PWD")"
-
-              if [ ! -d "$PGDATA" ]; then
-                echo "PostgreSQL has not been initialized yet"
-                echo "Run 'pg-start' to initialize and start PostgreSQL"
-                exit 1
-              fi
-
-              if pg_ctl status > /dev/null 2>&1; then
-                echo "PostgreSQL is running"
-                pg_ctl status
+              PORT="''${RAILS_DATABASE_PORT:-5432}"
+              BASE_NAME="$(basename "$PWD" | tr '[:upper:]' '[:lower:]' | tr -c '[:alnum:]-' '-' | sed 's/^-*//' | sed 's/-*$//')"
+              PROJECT_NAME="$BASE_NAME-postgres-$PORT"
+              
+              if docker ps --format '{{.Names}}' | grep -q "^$PROJECT_NAME$"; then
+                echo "PostgreSQL container is running on port $PORT"
+                docker ps --filter "name=$PROJECT_NAME" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
               else
-                echo "PostgreSQL is not running"
+                echo "PostgreSQL container on port $PORT is not running"
                 echo "Run 'pg-start' to start PostgreSQL"
                 exit 1
               fi
@@ -88,7 +97,8 @@
             ruby-3
             bundler # 2.7.2
             docker
-            postgresql_17
+            docker-compose
+            postgresql_17 # for psql client tools
             libyaml # NOTE: for psych gem
             openssl
             redis
