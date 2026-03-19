@@ -23,71 +23,47 @@
       devShell = with pkgs;
         mkShell {
           buildInputs = [
-            # PostgreSQL Docker management scripts
-            (writeScriptBin "pg-start" ''
+            # Combined Docker management script for PostgreSQL and Redis
+            (writeScriptBin "docker-start" ''
               #!${runtimeShell}
-              PORT="''${RAILS_DATABASE_PORT:-5432}"
+              PG_PORT="''${RAILS_DATABASE_PORT:-5432}"
+              REDIS_PORT="''${REDIS_PORT:-6379}"
               BASE_NAME="$(basename "$PWD" | tr '[:upper:]' '[:lower:]' | tr -c '[:alnum:]-' '-' | sed 's/^-*//' | sed 's/-*$//')"
-              PROJECT_NAME="$BASE_NAME-postgres-$PORT"
+              PROJECT_NAME="$BASE_NAME"
               
               # Create docker-compose.yml content
               COMPOSE_FILE=$(cat <<EOF
               services:
                 db:
                   image: postgres:17
-                  container_name: $PROJECT_NAME
+                  container_name: $PROJECT_NAME-postgres-$PG_PORT
                   environment:
                     - POSTGRES_HOST_AUTH_METHOD=trust
                     - POSTGRES_USER=''${USER:-postgres}
                   ports:
-                    - "$PORT:5432"
+                    - "$PG_PORT:5432"
                   volumes:
                     - postgres_data:/var/lib/postgresql/data
 
+                redis:
+                  image: redis:7
+                  container_name: $PROJECT_NAME-redis-$REDIS_PORT
+                  ports:
+                    - "$REDIS_PORT:6379"
+                  volumes:
+                    - redis_data:/data
+
               volumes:
                 postgres_data:
+                redis_data:
               EOF
               )
               
-              # Check if container is already running
-              if docker ps --format '{{.Names}}' | grep -q "^$PROJECT_NAME$"; then
-                echo "PostgreSQL container is already running on port $PORT"
-              else
-                echo "Starting PostgreSQL container on port $PORT..."
-                echo "$COMPOSE_FILE" | docker compose -p "$PROJECT_NAME" -f - up -d
-                echo "PostgreSQL started successfully on port $PORT"
-              fi
-            '')
-
-            (writeScriptBin "pg-stop" ''
-              #!${runtimeShell}
-              PORT="''${RAILS_DATABASE_PORT:-5432}"
-              BASE_NAME="$(basename "$PWD" | tr '[:upper:]' '[:lower:]' | tr -c '[:alnum:]-' '-' | sed 's/^-*//' | sed 's/-*$//')"
-              PROJECT_NAME="$BASE_NAME-postgres-$PORT"
-              
-              if docker ps --format '{{.Names}}' | grep -q "^$PROJECT_NAME$"; then
-                echo "Stopping PostgreSQL container on port $PORT..."
-                docker stop "$PROJECT_NAME"
-                echo "PostgreSQL stopped successfully"
-              else
-                echo "PostgreSQL container on port $PORT is not running"
-              fi
-            '')
-
-            (writeScriptBin "pg-status" ''
-              #!${runtimeShell}
-              PORT="''${RAILS_DATABASE_PORT:-5432}"
-              BASE_NAME="$(basename "$PWD" | tr '[:upper:]' '[:lower:]' | tr -c '[:alnum:]-' '-' | sed 's/^-*//' | sed 's/-*$//')"
-              PROJECT_NAME="$BASE_NAME-postgres-$PORT"
-              
-              if docker ps --format '{{.Names}}' | grep -q "^$PROJECT_NAME$"; then
-                echo "PostgreSQL container is running on port $PORT"
-                docker ps --filter "name=$PROJECT_NAME" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-              else
-                echo "PostgreSQL container on port $PORT is not running"
-                echo "Run 'pg-start' to start PostgreSQL"
-                exit 1
-              fi
+              echo "Starting PostgreSQL on port $PG_PORT and Redis on port $REDIS_PORT..."
+              echo "$COMPOSE_FILE" | docker compose -p "$PROJECT_NAME" -f - up -d
+              echo "Services started successfully!"
+              echo "  PostgreSQL: localhost:$PG_PORT"
+              echo "  Redis: localhost:$REDIS_PORT"
             '')
 
             # Node.js and Yarn
@@ -99,9 +75,9 @@
             docker
             docker-compose
             postgresql_17 # for psql client tools
+            redis # for redis-cli client tools
             libyaml # NOTE: for psych gem
             openssl
-            redis
             awscli2
           ];
         };
