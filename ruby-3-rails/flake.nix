@@ -26,11 +26,11 @@
             # Combined Docker management script for PostgreSQL and Redis
             (writeScriptBin "docker-start" ''
               #!${runtimeShell}
-              PG_PORT="''${RAILS_DATABASE_PORT:-5432}"
+              PG_PORT="''${RAILS_DATABASE_PORT:-''${DB_PORT:-5432}}"
               REDIS_PORT="''${REDIS_PORT:-6379}"
               BASE_NAME="$(basename "$PWD" | tr '[:upper:]' '[:lower:]' | tr -c '[:alnum:]-' '-' | sed 's/^-*//' | sed 's/-*$//')"
               PROJECT_NAME="$BASE_NAME"
-              
+
               # Create docker-compose.yml content
               COMPOSE_FILE=$(cat <<EOF
               services:
@@ -58,7 +58,7 @@
                 redis_data:
               EOF
               )
-              
+
               echo "Starting PostgreSQL on port $PG_PORT and Redis on port $REDIS_PORT..."
               echo "$COMPOSE_FILE" | docker compose -p "$PROJECT_NAME" -f - up -d
               echo "Services started successfully!"
