@@ -41,7 +41,7 @@
                   ports:
                     - "$PG_PORT:5432"
                   volumes:
-                    - postgres_data:/var/lib/postgresql/data
+                    - postgres_data:/var/lib/postgresql
 
                 redis:
                   image: redis:7
