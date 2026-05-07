@@ -69,7 +69,6 @@
             yarn-berry
 
             ruby
-            bundler # 4.0.9
             docker
             docker-compose
             postgresql_18 # for psql client tools
