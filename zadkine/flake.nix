@@ -75,8 +75,13 @@
             redis # for redis-cli client tools
             libyaml # NOTE: for psych gem
             openssl
+            vips
+            imagemagick
             awscli2
           ];
+          shellHook = ''
+            export LD_LIBRARY_PATH=${pkgs.vips}/lib:${pkgs.imagemagick}/lib:$LD_LIBRARY_PATH
+          '';
         };
     });
 }
