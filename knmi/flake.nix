@@ -78,8 +78,15 @@
             awscli2
             vips
             imagemagick
+
+            pkg-config
+            libxml2
+            libxslt
+            gcc
           ];
           env.LD_LIBRARY_PATH = "${pkgs.vips.out}/lib:${pkgs.imagemagick}/lib";
+          env.LDFLAGS = "-L${libxml2.out}/lib -L${libxslt.out}/lib";
+          env.CPPFLAGS = "-I${libxml2.dev}/include -I${libxslt.dev}/include";
         };
     });
 }
