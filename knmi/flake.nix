@@ -21,7 +21,8 @@
       devShell = with pkgs;
         mkShell {
           buildInputs = [
-            yarn-berry
+            nodejs_22
+            pnpm
 
             ruby
             bundler # 2.7.2
