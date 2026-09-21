@@ -24,7 +24,7 @@
         mkShell {
           buildInputs = [
             # Node.js and Yarn
-            nodejs_26
+            nodejs
             yarn-berry
 
             ruby-3
