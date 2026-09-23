@@ -25,7 +25,7 @@
           buildInputs = [
             # Node.js and Yarn
             nodejs
-            yarn-berry
+            # Install yarn via corepack enable
 
             ruby-3
             bundler # 2.7.2
