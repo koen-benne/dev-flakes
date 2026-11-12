@@ -30,11 +30,13 @@
             ruby-4
             docker
             docker-compose
-            postgresql_17 # for psql client tools
+            postgresql_18 # for psql client tools
             redis # for redis-cli client tools
             libyaml # NOTE: for psych gem
             openssl
             awscli2
+            vips
+            imagemagick
           ];
         };
     });
